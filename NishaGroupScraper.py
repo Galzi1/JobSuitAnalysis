@@ -1,10 +1,8 @@
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
 import pandas as pd
-from Utils import calc_distance
 
 base_url = "https://www.nisha.co.il/"
 search_url = "Search?NicheID=1&catID=2,23&GeoAreas=2,4,9"
@@ -36,7 +34,9 @@ class NishaGroupScraper:
 
     def get_jobs_in_page(self, page_url):
         self.driver.get(page_url)
-        jobs_table = self.driver.find_element(By.CSS_SELECTOR, 'table')
+        # jobs_table = self.driver.find_element(By.CSS_SELECTOR, 'table')
+        jobs_table = WebDriverWait(self.driver, 10).until(ec.visibility_of_element_located(
+            (By.CSS_SELECTOR, 'table')))
         jobs_titles = jobs_table.find_elements(By.CSS_SELECTOR, 'tr.jobtr')
         jobs_titles = [item for item in jobs_titles if item.find_elements(By.CSS_SELECTOR, 'td.jobtds')]
         jobs_elements = jobs_table.find_elements(By.CSS_SELECTOR, 'tr.trdetails')
@@ -71,7 +71,7 @@ class NishaGroupScraper:
                                 #             .get_attribute("textContent"))
                             k += 1
 
-                        job["description"] = "" if len(desc) == 0 else '\n'.join(desc)
+                        job["description"] = "" if len(desc) == 0 else ' '.join(desc)
                     elif 'דרישות' in job_fields[j].get_attribute('textContent'):
                         k = j + 1
                         req = []
@@ -83,15 +83,7 @@ class NishaGroupScraper:
                                 req.append(job_requirements_element.text)
                             k += 1
 
-                        job["requirements"] = "" if len(req) == 0 else '\n'.join(req)
-
-                        # job_requirements_element = job_fields[j + 1]
-                        # if job_requirements_element.tag_name == 'p':
-                        #     job["requirements"] = job_requirements_element.get_attribute("textContent")
-                        # elif job_requirements_element.tag_name == 'div':
-                        #     job["requirements"] = job_requirements_element.find_element(By.CSS_SELECTOR, 'p').get_attribute("textContent")
-                        # else:
-                        #     job["requirements"] = ""
+                        job["requirements"] = "" if len(req) == 0 else ' '.join(req)
 
             self.jobs_collection.append(job)
 
